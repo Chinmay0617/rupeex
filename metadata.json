@@ -1,0 +1,7 @@
+{
+  "name": "RupeeX",
+  "description": "Smart behavioral finance platform for modern India. Powered by Gemini AI for intelligent ledger management and future forecasting.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
