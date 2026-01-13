@@ -1,77 +1,143 @@
 import express from 'express';
 import axios from 'axios';
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
-import { Transaction, CATEGORIES, AdvisorMessage } from "../types";
+import { Transaction, CATEGORIES, AdvisorMessage } from "../src/types";
 import auth from '../middleware/auth.js';
 
 const router = express.Router();
 
 const getGenAI = () => {
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-        throw new Error("GEMINI_API_KEY is not defined in the .env file");
-    }
+    if (!apiKey) return null;
     return new GoogleGenerativeAI(apiKey);
+};
+
+// --- Groq Helper ---
+// --- Groq Helper ---
+const callGroqAPI = async (systemPrompt: string, userPrompt: string) => {
+    const apiKey = process.env.GROQ_API_KEY?.trim();
+    if (!apiKey) throw new Error("No Groq API Key");
+
+    try {
+        const response = await axios.post(
+            'https://api.groq.com/openai/v1/chat/completions',
+            {
+                model: "llama-3.3-70b-versatile", // Using the latest supported model
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: userPrompt }
+                ],
+                temperature: 0.7
+            },
+            {
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+        return response.data.choices[0].message.content;
+    } catch (error: any) {
+        if (error.response) {
+            console.error("Groq API Error Details:", JSON.stringify(error.response.data, null, 2));
+        }
+        throw error;
+    }
 };
 
 router.post('/parse-transaction', auth, async (req, res) => {
     const { text } = req.body;
-    if (!text) {
-        return res.status(400).json({ error: 'Text is required' });
-    }
+    if (!text) return res.status(400).json({ error: 'Text is required' });
+
+    const systemPrompt = `You are an expert at parsing financial transactions from natural language. From the user's text, extract the amount, description, category, and type (income or expense). The possible categories are: ${CATEGORIES.join(', ')}. Return ONLY raw JSON data. No markdown.`;
 
     try {
-        const genAI = getGenAI();
-        const model = genAI.getGenerativeModel({
-            model: 'gemini-pro',
-            systemInstruction: `You are an expert at parsing financial transactions from natural language. From the user's text, extract the amount, description, category, and type (income or expense). The possible categories are: ${CATEGORIES.join(', ')}. Return the data in JSON format.`,
-        });
+        let jsonString = "";
 
-        const result = await model.generateContent(text);
-        const response = await result.response;
-        const responseText = response.text();
-
-        // Clean up the response text if it contains markdown code blocks
-        const jsonString = responseText.replace(/```json\n?|\n?```/g, '').trim();
-
-        try {
-            const jsonResponse = JSON.parse(jsonString);
-            res.json(jsonResponse);
-        } catch (parseError) {
-            console.error('JSON Parse Error:', parseError);
-            console.error('Raw Response:', responseText);
-            res.status(500).json({ error: 'Failed to parse transaction response' });
+        // Priority 1: Groq (Llama 3) - Fast & Free
+        if (process.env.GROQ_API_KEY) {
+            console.log('Using AI Provider: Groq (Llama 3)');
+            jsonString = await callGroqAPI(systemPrompt, text);
         }
-    } catch (error) {
-        console.error('Error parsing transaction:', error);
-        res.status(500).json({ error: 'Failed to parse transaction' });
+        // Priority 2: Google Gemini (1.5 Flash)
+        else if (process.env.GEMINI_API_KEY) {
+            console.log('Using AI Provider: Gemini 1.5 Flash');
+            const genAI = getGenAI();
+            if (genAI) {
+                const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash', systemInstruction: systemPrompt });
+                const result = await model.generateContent(text);
+                jsonString = result.response.text();
+            }
+        } else {
+            throw new Error("No AI API Keys found");
+        }
+
+        // Clean and Parse
+        jsonString = jsonString.replace(/```json\n?|\n?```/g, '').trim();
+        const jsonResponse = JSON.parse(jsonString);
+
+        // Add source tag
+        res.json({ ...jsonResponse, source: process.env.GROQ_API_KEY ? 'AI_LLAMA3' : 'AI_GEMINI' });
+
+    } catch (error: any) {
+        console.log(`AI Provider Failed: ${error.message || 'Unknown'}. Switching to Offline Mode.`);
+
+        // Fallback: Local Regex Parsing
+        const amountMatch = text.match(/[\d,]+\.?\d{0,2}/);
+        const amount = amountMatch ? parseFloat(amountMatch[0].replace(/,/g, '')) : 0;
+
+        let category = 'Misc';
+        const lowerText = text.toLowerCase();
+        for (const cat of CATEGORIES) {
+            if (lowerText.includes(cat.toLowerCase()) ||
+                (cat === 'Food & Dining' && (lowerText.includes('food') || lowerText.includes('eat') || lowerText.includes('dinner'))) ||
+                (cat === 'Transport' && (lowerText.includes('cab') || lowerText.includes('uber') || lowerText.includes('fuel')))
+            ) {
+                category = cat;
+                break;
+            }
+        }
+
+        res.json({
+            amount,
+            description: text,
+            category,
+            type: 'EXPENSE',
+            confidence: 0.5,
+            source: 'OFFLINE_NLP'
+        });
     }
 });
 
 router.post('/ask-advisor', auth, async (req, res) => {
     const { query, history, messages } = req.body;
-    if (!query) {
-        return res.status(400).json({ error: 'Query is required' });
-    }
+    if (!query) return res.status(400).json({ error: 'Query is required' });
+
+    const systemPrompt = "You are the RupeeX AI Financial Advisor. Your goal is to provide insightful, concise, and actionable financial advice based on the user's transaction history and their questions. Be sharp, professional, and helpful.";
+    const data = (history as Transaction[]).slice(-30).map(t => `${t.date}: ${t.description} ${t.amount} (${t.category})`).join('\n');
+    const chatHistory = (messages as AdvisorMessage[]).slice(-5).map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n');
+    const userPrompt = `Recent Transactions:\n${data}\n\nChat History:\n${chatHistory}\n\nUser Query: "${query}"\n\nProvide your analysis and advice:`;
 
     try {
-        const genAI = getGenAI();
-        const model = genAI.getGenerativeModel({
-            model: 'gemini-pro',
-            systemInstruction: "You are the RupeeX AI Financial Advisor. Your goal is to provide insightful, concise, and actionable financial advice based on the user's transaction history and their questions. Be sharp, professional, and helpful."
-        });
+        let responseText = "";
 
-        const data = (history as Transaction[]).slice(-30).map(t => `${t.date}: ${t.description} ${t.amount} (${t.category})`).join('\n');
-        const chatHistory = (messages as AdvisorMessage[]).slice(-5).map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n');
+        if (process.env.GROQ_API_KEY) {
+            responseText = await callGroqAPI(systemPrompt, userPrompt);
+        } else if (process.env.GEMINI_API_KEY) {
+            const genAI = getGenAI();
+            if (genAI) {
+                const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash', systemInstruction: systemPrompt });
+                const result = await model.generateContent(userPrompt);
+                responseText = result.response.text();
+            }
+        } else {
+            throw new Error("No AI API Keys found");
+        }
 
-        const prompt = `Recent Transactions:\n${data}\n\nChat History:\n${chatHistory}\n\nUser Query: "${query}"\n\nProvide your analysis and advice:`
-
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        res.send(response.text());
-    } catch (error) {
-        console.error('Error with advisor:', error);
-        res.status(500).json({ error: 'Failed to get advice' });
+        res.send(responseText);
+    } catch (error: any) {
+        console.log(`Advisor Error: ${error.message}. Returning offline message.`);
+        res.send("I am currently operating in Offline Mode. I can't access live AI analysis right now, but your local transaction data is secure. Please configure a valid API key (Groq or Gemini) in your settings to enable full advisory capabilities.");
     }
 });
 

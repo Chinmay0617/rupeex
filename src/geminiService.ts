@@ -1,6 +1,7 @@
 import { Transaction, AdvisorMessage } from "./types";
 
-const API_BASE_URL = 'http://localhost:5000/api/gemini';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+const API_BASE_URL = `${BASE_URL}/gemini`;
 
 // Helper to get token
 const getToken = () => {

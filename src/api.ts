@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { Transaction, Budget, SavingsGoal } from './types';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
 const api = axios.create({
     baseURL: API_BASE_URL,
@@ -28,6 +28,8 @@ setAuthToken(token);
 // Auth
 
 export const login = (email: string, password: string) => api.post('/auth/login', { email, password });
+
+export const googleLogin = (token: string) => api.post('/auth/google', { token });
 
 export const register = (email: string, password: string) => api.post('/auth/signup', { email, password });
 

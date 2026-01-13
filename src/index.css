@@ -1,0 +1,145 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --transition-speed: 0.4s;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  transition: background-color var(--transition-speed) ease;
+  -webkit-font-smoothing: antialiased;
+}
+
+.mono-num {
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: -0.05em;
+}
+
+/* Premium Light Shadow System - Soft Layering */
+.glass-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0 1px 2px 0 rgba(0, 0, 0, 0.02),
+    0 4px 6px -1px rgba(0, 0, 0, 0.01),
+    0 20px 25px -5px rgba(0, 0, 0, 0.03),
+    0 10px 10px -5px rgba(0, 0, 0, 0.02);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark .glass-card {
+  background: rgba(17, 24, 39, 0.7);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+}
+
+.premium-glow {
+  box-shadow: 0 15px 30px -5px rgba(99, 102, 241, 0.2);
+}
+
+.dark .premium-glow {
+  box-shadow: 0 0 40px rgba(99, 102, 241, 0.2);
+}
+
+.rx-accent-gradient {
+  background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
+}
+
+.neo-gradient {
+  background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+}
+
+/* Modern Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.1);
+  border-radius: 20px;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Sidebar Interactive State */
+.sidebar-item-active {
+  background: #FFFFFF !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04);
+  color: #6366F1 !important;
+}
+
+.dark .sidebar-item-active {
+  background: rgba(99, 102, 241, 0.1) !important;
+  box-shadow: none;
+  color: #818CF8 !important;
+}
+
+.stat-card-hover:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.08);
+}
+
+/* Smooth Animations */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-from-bottom-4 {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-in {
+  animation-fill-mode: both;
+}
+
+.fade-in {
+  animation: fade-in 0.5s ease-out;
+}
+
+.slide-in-from-bottom-4 {
+  animation: slide-in-from-bottom-4 0.5s ease-out;
+}
+
+.duration-1000 {
+  animation-duration: 1s;
+}
+
+/* Additional Premium Utilities */
+.rx-premium-shadow {
+  box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.06);
+}
+
+.dark .rx-premium-shadow {
+  box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.3);
+}
+
+.rx-glow-indigo {
+  box-shadow: 0 10px 30px -5px rgba(99, 102, 241, 0.3);
+}
+
+.dark .rx-glow-indigo {
+  box-shadow: 0 10px 40px -5px rgba(99, 102, 241, 0.4);
+}

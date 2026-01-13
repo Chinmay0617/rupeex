@@ -1,12 +1,13 @@
 
 export type TransactionType = 'INCOME' | 'EXPENSE';
-export type CurrencyCode = 'INR' | 'USD' | 'EUR' | 'GBP' | 'JPY';
+export type CurrencyCode = 'INR' | 'USD' | 'EUR' | 'GBP' | 'JPY' | 'AUD' | 'CAD' | 'CHF' | 'CNY' | 'SGD' | 'AED';
 
 export interface User {
   userId: string;
   email: string;
   createdAt?: string;
   baseCurrency: CurrencyCode;
+  googleId?: string;
 }
 
 export interface AuthResponse {
@@ -72,7 +73,13 @@ export const CURRENCY_SYMBOLS: Record<CurrencyCode, string> = {
   USD: '$',
   EUR: '€',
   GBP: '£',
-  JPY: '¥'
+  JPY: '¥',
+  AUD: 'A$',
+  CAD: 'C$',
+  CHF: 'Fr',
+  CNY: '¥',
+  SGD: 'S$',
+  AED: 'dh'
 };
 
 export const MOCK_EXCHANGE_RATES: Record<CurrencyCode, number> = {
@@ -80,7 +87,13 @@ export const MOCK_EXCHANGE_RATES: Record<CurrencyCode, number> = {
   INR: 83.5,
   EUR: 0.92,
   GBP: 0.78,
-  JPY: 158.0
+  JPY: 158.0,
+  AUD: 1.52,
+  CAD: 1.37,
+  CHF: 0.91,
+  CNY: 7.24,
+  SGD: 1.35,
+  AED: 3.67
 };
 
 export const convertAmount = (amount: number, from: CurrencyCode, to: CurrencyCode): number => {

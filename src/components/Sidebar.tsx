@@ -1,7 +1,7 @@
 
 import React from 'react';
 import Logo from './Logo';
-import { CurrencyCode } from '../types';
+import { CurrencyCode, CURRENCY_SYMBOLS } from '../types';
 
 type Tab = 'dashboard' | 'transactions' | 'predictions' | 'budgets' | 'reports' | 'advisor';
 
@@ -28,7 +28,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     { id: 'reports', label: 'Audits', icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" /></svg> },
   ];
 
-  const currencies: CurrencyCode[] = ['USD', 'INR', 'EUR', 'GBP', 'JPY'];
+  const currencies: CurrencyCode[] = ['USD', 'INR', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF', 'CNY', 'SGD', 'AED'];
 
   return (
     <aside className="w-80 bg-slate-50 dark:bg-space-950 border-r border-slate-200 dark:border-slate-800/60 hidden lg:flex flex-col h-full transition-all">
@@ -45,8 +45,8 @@ const Sidebar: React.FC<SidebarProps> = ({
               key={item.id}
               onClick={() => setActiveTab(item.id)}
               className={`w-full flex items-center gap-5 px-6 py-5 rounded-2xl text-[13px] font-black transition-all duration-300 ${activeTab === item.id
-                  ? 'sidebar-item-active'
-                  : 'text-slate-500 hover:text-brand-600 hover:bg-white dark:hover:bg-slate-900/40'
+                ? 'sidebar-item-active'
+                : 'text-slate-500 hover:text-brand-600 hover:bg-white dark:hover:bg-slate-900/40'
                 }`}
             >
               <span className={activeTab === item.id ? 'text-brand-500' : 'text-slate-400 group-hover:text-brand-500 transition-colors'}>{item.icon}</span>
@@ -66,12 +66,12 @@ const Sidebar: React.FC<SidebarProps> = ({
               <button
                 key={curr}
                 onClick={() => setBaseCurrency(curr)}
-                className={`flex-1 min-w-[3.5rem] py-2 rounded-xl text-[10px] font-black transition-all border ${baseCurrency === curr
-                    ? 'bg-brand-500 text-white border-brand-500 shadow-md transform scale-105'
-                    : 'bg-slate-50 dark:bg-slate-950/30 text-slate-500 border-slate-100 dark:border-slate-800 hover:border-brand-300 dark:hover:border-brand-700 hover:text-brand-600'
+                className={`flex-1 min-w-[3.5rem] py-2 rounded-xl text-base font-black transition-all border ${baseCurrency === curr
+                  ? 'bg-brand-500 text-white border-brand-500 shadow-md transform scale-105'
+                  : 'bg-slate-50 dark:bg-slate-950/30 text-slate-500 border-slate-100 dark:border-slate-800 hover:border-brand-300 dark:hover:border-brand-700 hover:text-brand-600'
                   }`}
               >
-                {curr}
+                {CURRENCY_SYMBOLS[curr]}
               </button>
             ))}
           </div>

@@ -16,14 +16,15 @@ const Logo: React.FC<LogoProps> = ({ className = '', size = 'md', showText = tru
 
   return (
     <div className={`flex items-center gap-4 ${className}`}>
-      <div className={`${sizes[size].box} bg-indigo-600 dark:bg-white rounded-xl flex items-center justify-center relative shadow-xl shrink-0 group overflow-hidden`}>
-        <div className="absolute inset-0 rx-accent-gradient opacity-100 transition-opacity"></div>
-        <span className={`${sizes[size].icon} text-white dark:text-space-950 font-black flex items-center justify-center z-10 mono-num`}>
-          X
-        </span>
-        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-cyan-400 rounded-full border-2 border-white dark:border-space-950 shadow-sm"></div>
+      {/* Container for the logo image */}
+      <div className={`${sizes[size].box} relative shrink-0`}>
+        <img
+          src="/logo.png"
+          alt="RupeeX Logo"
+          className="w-full h-full object-contain drop-shadow-2xl filter brightness-110 saturate-125"
+        />
       </div>
-      
+
       {showText && (
         <h1 className={`${sizes[size].text} font-black tracking-tighter text-space-950 dark:text-white leading-none`}>
           Rupee<span className="text-indigo-600 dark:text-indigo-500">X</span>

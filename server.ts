@@ -9,6 +9,7 @@ import seedRouter from './routes/seed.js';
 import transactionsRouter from './routes/transactions.js';
 import budgetsRouter from './routes/budgets.js';
 import goalsRouter from './routes/goals.js';
+import usersRouter from './routes/users.js';
 
 dotenv.config();
 
@@ -50,6 +51,7 @@ app.use('/api/seed', seedRouter);
 app.use('/api/transactions', transactionsRouter);
 app.use('/api/budgets', budgetsRouter);
 app.use('/api/goals', goalsRouter);
+app.use('/api/users', usersRouter);
 
 app.listen(port, () => {
   console.log(`Server is running on port: ${port}`);
