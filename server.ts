@@ -53,6 +53,16 @@ app.use('/api/budgets', budgetsRouter);
 app.use('/api/goals', goalsRouter);
 app.use('/api/users', usersRouter);
 
-app.listen(port, () => {
-  console.log(`Server is running on port: ${port}`);
-});
+import { fileURLToPath } from 'url';
+
+// ... (existing imports)
+
+// ...
+
+export default app;
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  app.listen(port, () => {
+    console.log(`Server is running on port: ${port}`);
+  });
+}
