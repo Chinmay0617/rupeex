@@ -104,10 +104,10 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess, isDarkMode, toggleDa
         <div className="w-full max-w-md animate-in fade-in slide-in-from-right-8 duration-700">
           <div className="mb-12">
             <h2 className="text-4xl font-black text-space-950 dark:text-white tracking-tight mb-3">
-              {isLogin ? 'Welcome Back' : 'Create Account'}
+              {isLogin ? 'Login' : 'Create Account'}
             </h2>
             <p className="text-slate-500 font-medium">
-              {isLogin ? 'Enter your credentials to access your node.' : 'Initialize a new portfolio node to get started.'}
+              {isLogin ? 'Enter your details to continue.' : 'Start your financial journey.'}
             </p>
           </div>
 
