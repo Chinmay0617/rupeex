@@ -13,15 +13,19 @@ const api = axios.create({
 // Set auth token helper
 export const setAuthToken = (token: string | null) => {
     if (token) {
-        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        api.defaults.headers.common['x-auth-token'] = token;
+        localStorage.setItem('auth_token', token);
     } else {
-        delete api.defaults.headers.common['Authorization'];
+        delete api.defaults.headers.common['x-auth-token'];
+        localStorage.removeItem('auth_token');
     }
 };
 
 // Initialize the auth token from localStorage if it exists
-const token = localStorage.getItem('fintrack_session') ? JSON.parse(localStorage.getItem('fintrack_session') || '{}').token : null;
-// setAuthToken(token); // Clerk handles token refreshing, so this init might be redundant or handled by App.tsx
+const token = localStorage.getItem('auth_token');
+if (token) {
+    setAuthToken(token);
+}
 
 
 // Auth
