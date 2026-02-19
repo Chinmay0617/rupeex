@@ -61,7 +61,7 @@ const SavingsGoal = mongoose.model('SavingsGoal', savingsGoalSchema);
 const seedDatabase = async () => {
     try {
         console.log('🔌 Connecting to MongoDB...');
-        await mongoose.connect(MONGO_URI);
+        await mongoose.connect(MONGO_URI, { dbName: 'rupeex_main' });
         console.log('✅ Connected to MongoDB');
 
         // Clear existing data

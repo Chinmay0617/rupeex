@@ -11,6 +11,13 @@ export default defineConfig(({ mode }) => {
       headers: {
         'Cross-Origin-Opener-Policy': 'unsafe-none',
       },
+      proxy: {
+        '/api': {
+          target: 'http://localhost:5000',
+          changeOrigin: true,
+          secure: false,
+        }
+      }
     },
     plugins: [react()],
     define: {

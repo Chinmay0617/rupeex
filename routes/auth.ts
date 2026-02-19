@@ -12,20 +12,22 @@ const router = express.Router();
 // @access  Public
 router.post('/register', async (req, res) => {
   const { email, password } = req.body;
+  console.log(`[Auth] Registration attempt for: ${email}`);
 
   try {
     let user = await User.findOne({ email });
 
     if (user) {
       if (!user.password) {
-        // User exists from legacy auth but has no password. Allow setting it now.
+        console.log(`[Auth] Legacy user found without password: ${email}. Setting password.`);
         user.password = password;
         await user.save();
       } else {
+        console.log(`[Auth] Registration failed: User already exists - ${email}`);
         return res.status(400).json({ msg: 'User already exists' });
       }
     } else {
-      // Create new user
+      console.log(`[Auth] Creating new user: ${email}`);
       user = new User({
         email,
         password,
@@ -39,7 +41,6 @@ router.post('/register', async (req, res) => {
       },
     };
 
-    // FALLBACK SECRET FOR DUBUGGING ONLY
     const JWT_SECRET = process.env.JWT_SECRET || "fallback_debug_secret_fintrack_2024";
 
     jwt.sign(
@@ -48,15 +49,16 @@ router.post('/register', async (req, res) => {
       { expiresIn: 360000 },
       (err, token) => {
         if (err) {
-          console.error("JWT Sign Error:", err);
+          console.error("[Auth] JWT Sign Error:", err);
           return res.status(500).json({ msg: "Error generating token" });
         }
+        console.log(`[Auth] Registration successful for: ${email}`);
         res.json({ token });
       }
     );
   } catch (err: any) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    console.error(`[Auth] Registration Error for ${email}:`, err.message);
+    res.status(500).json({ msg: 'Server error during registration', error: err.message });
   }
 });
 
@@ -65,22 +67,25 @@ router.post('/register', async (req, res) => {
 // @access  Public
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
+  console.log(`[Auth] Login attempt for: ${email}`);
 
   try {
     let user = await User.findOne({ email });
 
     if (!user) {
+      console.log(`[Auth] Login failed: User not found - ${email}`);
       return res.status(400).json({ msg: 'Invalid Credentials' });
     }
 
-    // Check if user was created via Google/Clerk but has no password set
     if (!user.password) {
+      console.log(`[Auth] Login failed: User has no password set - ${email}`);
       return res.status(400).json({ msg: 'Account exists but has no password. Please use "Sign Up" to set one.' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
+      console.log(`[Auth] Login failed: Password mismatch for ${email}`);
       return res.status(400).json({ msg: 'Invalid Credentials' });
     }
 
@@ -90,7 +95,6 @@ router.post('/login', async (req, res) => {
       },
     };
 
-    // FALLBACK SECRET FOR DUBUGGING ONLY
     const JWT_SECRET = process.env.JWT_SECRET || "fallback_debug_secret_fintrack_2024";
 
     jwt.sign(
@@ -99,14 +103,15 @@ router.post('/login', async (req, res) => {
       { expiresIn: 360000 },
       (err, token) => {
         if (err) {
-          console.error("JWT Sign Error:", err);
+          console.error("[Auth] JWT Sign Error:", err);
           return res.status(500).json({ msg: "Error generating token" });
         }
+        console.log(`[Auth] Login successful for: ${email}`);
         res.json({ token });
       }
     );
   } catch (err: any) {
-    console.error("Login Error:", err);
+    console.error(`[Auth] Login Error for ${email}:`, err.message);
     res.status(500).json({ msg: `Login Failed: ${err.message}` });
   }
 });
@@ -117,6 +122,9 @@ router.post('/login', async (req, res) => {
 router.get('/me', auth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
     res.json(user);
   } catch (err: any) {
     console.error("GetProfile Error:", err);
