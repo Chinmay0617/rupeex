@@ -1,8 +1,8 @@
 
+import 'dotenv/config'; // Load env vars before anything else
 import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
-import dotenv from 'dotenv';
 import authRouter from './routes/auth.js';
 import geminiRouter from './routes/gemini.js';
 import seedRouter from './routes/seed.js';
@@ -10,8 +10,6 @@ import transactionsRouter from './routes/transactions.js';
 import budgetsRouter from './routes/budgets.js';
 import goalsRouter from './routes/goals.js';
 import usersRouter from './routes/users.js';
-
-dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 5000;
