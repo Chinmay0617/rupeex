@@ -19,7 +19,9 @@ const App: React.FC = () => {
   const { user: clerkUser, isLoaded, isSignedIn } = useUser();
   const { getToken, signOut } = useAuth();
 
+
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [syncError, setSyncError] = useState<string | null>(null);
 
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('fintrack_theme') !== 'light');
@@ -46,8 +48,10 @@ const App: React.FC = () => {
           // Note: The middleware creates/syncs the user on first request.
           const res = await api.getProfile();
           setCurrentUser(res.data.user);
-        } catch (err) {
+
+        } catch (err: any) {
           console.error("Error syncing user:", err);
+          setSyncError(err.response?.data?.msg || err.message || "Failed to sync user identity.");
         }
       } else {
         api.setAuthToken(null);
@@ -147,6 +151,7 @@ const App: React.FC = () => {
     setCurrentUser(null);
   };
 
+
   if (!isLoaded) {
     return <div className="min-h-screen flex items-center justify-center bg-space-950 text-white font-bold">Initializing Node...</div>;
   }
@@ -158,6 +163,27 @@ const App: React.FC = () => {
         toggleDarkMode={() => setIsDarkMode(!isDarkMode)}
       />
     );
+  }
+
+  if (syncError) {
+    return (
+      <div className="min-h-screen flex flex-col gap-4 items-center justify-center bg-space-950 text-white p-8 text-center max-w-2xl mx-auto">
+        <div className="text-red-500 text-6xl mb-4">⚠️</div>
+        <h2 className="text-2xl font-black text-red-400">Identity Synchronization Failed</h2>
+        <p className="text-slate-400 font-mono text-sm bg-slate-900 p-4 rounded-xl border border-slate-800 w-full overflow-hidden text-wrap break-all">
+          {syncError}
+        </p>
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-4 px-6 py-3 bg-brand-600 rounded-xl font-bold hover:bg-brand-500 transition-all"
+        >
+          Retry Connection
+        </button>
+        <p className="text-xs text-slate-600 mt-8">
+          If this persists, verify "CLERK_SECRET_KEY" and "MONGO_URI" in production environment variables.
+        </p>
+      </div>
+    )
   }
 
   if (!currentUser) {
