@@ -24,7 +24,7 @@ router.get('/me', auth, async (req, res) => {
     });
   } catch (err: any) {
     console.error(err.message);
-    res.status(500).send('Server Error');
+    res.status(500).json({ msg: `Server Error in Auth Route: ${err.message}` });
   }
 });
 
