@@ -3,8 +3,10 @@ import mongoose from 'mongoose';
 
 const MONGODB_URI = process.env.MONGO_URI;
 
+
+// If MONGO_URI is not set, log an error instead of crashing immediately.
 if (!MONGODB_URI) {
-    throw new Error('Please define the MONGO_URI environment variable inside .env.local');
+    console.warn('Warning: MONGO_URI environment variable is not defined.');
 }
 
 /**
@@ -24,6 +26,8 @@ async function dbConnect() {
     }
 
     if (!cached.promise) {
+        if (!MONGODB_URI) throw new Error("MONGO_URI is not defined.");
+
         const opts = {
             bufferCommands: false,
             dbName: 'rupeex_main',
