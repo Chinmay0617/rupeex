@@ -21,7 +21,9 @@ export default function (req: Request, res: Response, next: NextFunction) {
 
     // Verify token
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as any;
+        // FALLBACK SECRET FOR DUBUGGING ONLY
+        const JWT_SECRET = process.env.JWT_SECRET || "fallback_debug_secret_fintrack_2024";
+        const decoded = jwt.verify(token, JWT_SECRET) as any;
         req.user = decoded.user;
         next();
     } catch (err: any) {
