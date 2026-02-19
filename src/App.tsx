@@ -11,21 +11,15 @@ import Reports from './components/Reports';
 import Advisor from './components/Advisor';
 import Sidebar from './components/Sidebar';
 import AuthPage from './components/AuthPage';
+import { useUser, useAuth } from '@clerk/clerk-react';
 
 type Tab = 'dashboard' | 'transactions' | 'predictions' | 'budgets' | 'reports' | 'advisor';
 
 const App: React.FC = () => {
-  const [currentUser, setCurrentUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem('fintrack_session');
-    if (saved) {
-      const session = JSON.parse(saved);
-      if (session.token) {
-        api.setAuthToken(session.token);
-      }
-      return session.user || null;
-    }
-    return null;
-  });
+  const { user: clerkUser, isLoaded, isSignedIn } = useUser();
+  const { getToken, signOut } = useAuth();
+
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('fintrack_theme') !== 'light');
@@ -40,20 +34,38 @@ const App: React.FC = () => {
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // Sync Clerk User with Mongo User
+  useEffect(() => {
+    const syncUser = async () => {
+      if (isSignedIn && clerkUser) {
+        try {
+          const token = await getToken();
+          api.setAuthToken(token);
+
+          // Fetch Mongo User Profile (creates user in Mongo if needed via middleware logic, or explicit endpoint logic)
+          // Note: The middleware creates/syncs the user on first request.
+          const res = await api.getProfile();
+          setCurrentUser(res.data.user);
+        } catch (err) {
+          console.error("Error syncing user:", err);
+        }
+      } else {
+        api.setAuthToken(null);
+        setCurrentUser(null);
+      }
+    };
+
+    if (isLoaded) {
+      syncUser();
+    }
+  }, [isSignedIn, isLoaded, clerkUser, getToken]);
+
   useEffect(() => {
     if (currentUser) {
-      const saved = localStorage.getItem('fintrack_session');
-      const session = saved ? JSON.parse(saved) : {};
-      localStorage.setItem('fintrack_session', JSON.stringify({
-        ...session,
-        user: { ...currentUser, baseCurrency }
-      }));
+      // Only load data when we have the mongo user details
       loadData();
-    } else {
-      localStorage.removeItem('fintrack_session');
-      api.setAuthToken(null);
     }
-  }, [currentUser, baseCurrency]);
+  }, [currentUser, baseCurrency]); // trigger when currentUser is set
 
   useEffect(() => {
     if (isDarkMode) document.documentElement.classList.add('dark');
@@ -74,12 +86,7 @@ const App: React.FC = () => {
       setBudgets(budgetResponse.data);
       setGoals(goalResponse.data);
     } catch (err: any) {
-      // If token is invalid, log out user
-      if (err.response && err.response.status === 401) {
-        setCurrentUser(null);
-      } else {
-        console.error(err);
-      }
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -136,22 +143,27 @@ const App: React.FC = () => {
   };
 
   const handleLogout = () => {
+    signOut();
     setCurrentUser(null);
   };
 
-  if (!currentUser) {
+  if (!isLoaded) {
+    return <div className="min-h-screen flex items-center justify-center bg-space-950 text-white font-bold">Initializing Node...</div>;
+  }
+
+  if (!isSignedIn) {
     return (
       <AuthPage
-        onAuthSuccess={(res) => {
-          localStorage.setItem('fintrack_session', JSON.stringify(res));
-          api.setAuthToken(res.token);
-          setCurrentUser(res.user);
-        }}
         isDarkMode={isDarkMode}
         toggleDarkMode={() => setIsDarkMode(!isDarkMode)}
       />
     );
   }
+
+  if (!currentUser) {
+    return <div className="min-h-screen flex items-center justify-center bg-space-950 text-white font-bold animate-pulse">Syncing Identity...</div>;
+  }
+
 
   return (
     <div className="flex h-screen bg-space-50 dark:bg-space-950 transition-all duration-500 overflow-hidden">

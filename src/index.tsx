@@ -1,10 +1,9 @@
-
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
 
-import { GoogleOAuthProvider } from '@react-oauth/google';
+import { ClerkProvider } from '@clerk/clerk-react';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -13,17 +12,17 @@ if (!rootElement) {
 
 const root = ReactDOM.createRoot(rootElement);
 
-const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+// Import your publishable key
+const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
 
-if (!googleClientId) {
-  console.error("CRITICAL: VITE_GOOGLE_CLIENT_ID is missing in your .env file. Google Authentication will not work. Please add it to your .env file.");
+if (!PUBLISHABLE_KEY) {
+  throw new Error("Missing Publishable Key")
 }
 
 root.render(
   <React.StrictMode>
-    {/* Use a placeholder if missing to prevent "Uncaught _.Vc" crash, but warn user */}
-    <GoogleOAuthProvider clientId={googleClientId || 'missing-client-id-placeholder'}>
+    <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
       <App />
-    </GoogleOAuthProvider>
+    </ClerkProvider>
   </React.StrictMode>
 );

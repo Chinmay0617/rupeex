@@ -19,6 +19,11 @@ const userSchema = new mongoose.Schema({
     sparse: true,
     unique: true,
   },
+  clerkId: {
+    type: String,
+    unique: true,
+    sparse: true,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

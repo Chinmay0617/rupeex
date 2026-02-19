@@ -13,25 +13,26 @@ const api = axios.create({
 // Set auth token helper
 export const setAuthToken = (token: string | null) => {
     if (token) {
-        api.defaults.headers.common['x-auth-token'] = token;
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     } else {
-        delete api.defaults.headers.common['x-auth-token'];
+        delete api.defaults.headers.common['Authorization'];
     }
 };
 
 // Initialize the auth token from localStorage if it exists
 const token = localStorage.getItem('fintrack_session') ? JSON.parse(localStorage.getItem('fintrack_session') || '{}').token : null;
-setAuthToken(token);
-
+// setAuthToken(token); // Clerk handles token refreshing, so this init might be redundant or handled by App.tsx
 
 
 // Auth
 
-export const login = (email: string, password: string) => api.post('/auth/login', { email, password });
+// export const login = (email: string, password: string) => api.post('/auth/login', { email, password });
 
-export const googleLogin = (token: string) => api.post('/auth/google', { token });
+// export const googleLogin = (token: string) => api.post('/auth/google', { token });
 
-export const register = (email: string, password: string) => api.post('/auth/signup', { email, password });
+// export const register = (email: string, password: string) => api.post('/auth/signup', { email, password });
+
+export const getProfile = () => api.get('/auth/me');
 
 
 
