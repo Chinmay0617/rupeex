@@ -46,9 +46,9 @@ const syncUser = async (req: Request, res: Response, next: NextFunction) => {
                         await user.save();
                     }
                 }
-            } catch (clerkErr) {
+            } catch (clerkErr: any) {
                 console.error("Error fetching user from Clerk:", clerkErr);
-                return res.status(500).json({ msg: 'Error syncing user profile' });
+                return res.status(500).json({ msg: `Error syncing user profile: ${clerkErr.message || 'Unknown Clerk Error'}` });
             }
         }
 
