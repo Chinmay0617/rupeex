@@ -94,8 +94,8 @@ router.post('/login', async (req, res) => {
       }
     );
   } catch (err: any) {
-    console.error(err.message);
-    res.status(500).json({ msg: 'Server error' });
+    console.error("Login Error:", err);
+    res.status(500).json({ msg: `Login Failed: ${err.message}` });
   }
 });
 
@@ -107,8 +107,8 @@ router.get('/me', auth, async (req, res) => {
     const user = await User.findById(req.user.id).select('-password');
     res.json(user);
   } catch (err: any) {
-    console.error(err.message);
-    res.status(500).json({ msg: 'Server Error' });
+    console.error("GetProfile Error:", err);
+    res.status(500).json({ msg: `GetProfile Failed: ${err.message}` });
   }
 });
 
