@@ -31,6 +31,8 @@ async function dbConnect() {
         const opts = {
             bufferCommands: false,
             dbName: 'rupeex_main',
+            serverSelectionTimeoutMS: 5000, // Fail fast (5s) instead of hanging
+            socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
         };
 
         cached.promise = mongoose.connect(MONGODB_URI!, opts).then((mongoose) => {

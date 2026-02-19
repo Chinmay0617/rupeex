@@ -55,8 +55,10 @@ const connectToDB = async () => {
   }
 };
 
-// Initial connection for local dev
-connectToDB();
+// Health Check Endpoint (Bypass DB Middleware)
+app.get('/api/status', (req, res) => {
+  res.json({ status: 'ok', env: process.env.NODE_ENV, time: new Date().toISOString() });
+});
 
 // Middleware to ensure DB is connected for every request (crucial for Vercel)
 app.use(async (req, res, next) => {
