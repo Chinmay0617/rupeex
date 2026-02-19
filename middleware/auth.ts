@@ -61,7 +61,10 @@ const syncUser = async (req: Request, res: Response, next: NextFunction) => {
         }
     } catch (err: any) {
         console.error("Auth Middleware Error:", err);
-        res.status(500).send('Server Error');
+        res.status(500).json({
+            msg: `Auth Middleware Failed: ${err.message}`,
+            stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+        });
     }
 };
 
