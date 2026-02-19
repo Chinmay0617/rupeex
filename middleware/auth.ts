@@ -19,6 +19,9 @@ declare global {
 
 // Custom Middleware to sync Mongo User with Clerk User
 const syncUser = async (req: Request, res: Response, next: NextFunction) => {
+    // Enable CORS for this middleware explicitly
+    res.header('Access-Control-Allow-Origin', '*');
+
     if (!req.auth || !req.auth.userId) {
         return res.status(401).json({ msg: 'Unauthorized: No Clerk User' });
     }
@@ -70,3 +73,6 @@ const syncUser = async (req: Request, res: Response, next: NextFunction) => {
 
 // Export an array of middleware: Validate Clerk Token -> Sync Mongo User
 export default [ClerkExpressRequireAuth(), syncUser];
+
+// DEBUG MODE: Bypass Clerk Middleware locally (Uncomment below line and comment above line to test if Clerk is the issue)
+// export default [(req: any, res: any, next: any) => { req.user = { id: "REPLACE_WITH_VALID_MONGO_USER_ID" }; next(); }];
