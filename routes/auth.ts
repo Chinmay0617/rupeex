@@ -17,15 +17,21 @@ router.post('/register', async (req, res) => {
     let user = await User.findOne({ email });
 
     if (user) {
-      return res.status(400).json({ msg: 'User already exists' });
+      if (!user.password) {
+        // User exists from legacy auth but has no password. Allow setting it now.
+        user.password = password;
+        await user.save();
+      } else {
+        return res.status(400).json({ msg: 'User already exists' });
+      }
+    } else {
+      // Create new user
+      user = new User({
+        email,
+        password,
+      });
+      await user.save();
     }
-
-    user = new User({
-      email,
-      password,
-    });
-
-    await user.save();
 
     const payload = {
       user: {
@@ -63,7 +69,7 @@ router.post('/login', async (req, res) => {
 
     // Check if user was created via Google/Clerk but has no password set
     if (!user.password) {
-      return res.status(400).json({ msg: 'Please reset your password or login via the method you signed up with.' });
+      return res.status(400).json({ msg: 'Account exists but has no password. Please use "Sign Up" to set one.' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
