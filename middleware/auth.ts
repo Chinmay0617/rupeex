@@ -26,6 +26,6 @@ export default function (req: Request, res: Response, next: NextFunction) {
         next();
     } catch (err: any) {
         console.error("JWT Verification failed:", err.message);
-        res.status(401).json({ msg: 'Token is not valid' });
+        res.status(401).json({ msg: `Token is not valid: ${err.message}` });
     }
 };
