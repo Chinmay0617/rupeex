@@ -1,7 +1,7 @@
 import express from 'express';
 import axios from 'axios';
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
-import { Transaction, CATEGORIES, AdvisorMessage } from "../src/types";
+import { Transaction, CATEGORIES, AdvisorMessage } from "../src/types.js";
 import auth from '../middleware/auth.js';
 
 const router = express.Router();
