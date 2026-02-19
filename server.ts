@@ -24,12 +24,7 @@ app.use((req, res, next) => {
   next();
 });
 
-const uri = process.env.MONGO_URI;
 
-if (!uri) {
-  console.error("MONGO_URI is not defined in the .env file");
-  process.exit(1);
-}
 
 
 import dbConnect from './src/lib/db.js';

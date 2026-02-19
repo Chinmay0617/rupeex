@@ -11,17 +11,13 @@ import Reports from './components/Reports';
 import Advisor from './components/Advisor';
 import Sidebar from './components/Sidebar';
 import AuthPage from './components/AuthPage';
-import { useUser, useAuth } from '@clerk/clerk-react';
 
 type Tab = 'dashboard' | 'transactions' | 'predictions' | 'budgets' | 'reports' | 'advisor';
 
 const App: React.FC = () => {
-  const { user: clerkUser, isLoaded, isSignedIn } = useUser();
-  const { getToken, signOut } = useAuth();
-
-
+  const [token, setToken] = useState<string | null>(localStorage.getItem('auth_token'));
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [syncError, setSyncError] = useState<string | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('fintrack_theme') !== 'light');
@@ -36,46 +32,43 @@ const App: React.FC = () => {
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Sync Clerk User with Mongo User
+  // Initial Auth Check
   useEffect(() => {
-    const syncUser = async () => {
-      if (isSignedIn && clerkUser) {
+    const initAuth = async () => {
+      setAuthLoading(true);
+      if (token) {
+        api.setAuthToken(token);
         try {
-          const token = await getToken();
-          api.setAuthToken(token);
-
-          // Fetch Mongo User Profile (creates user in Mongo if needed via middleware logic, or explicit endpoint logic)
-          // Note: The middleware creates/syncs the user on first request.
           const res = await api.getProfile();
-          setCurrentUser(res.data.user);
-
-        } catch (err: any) {
-          console.error("Error syncing user:", err);
-          setSyncError(err.response?.data?.msg || err.message || "Failed to sync user identity.");
+          setCurrentUser(res.data);
+        } catch (err) {
+          console.error("Auth check failed:", err);
+          handleLogout();
         }
       } else {
-        api.setAuthToken(null);
-        setCurrentUser(null);
+        setAuthLoading(false);
       }
+      setAuthLoading(false);
     };
-
-    if (isLoaded) {
-      syncUser();
-    }
-  }, [isSignedIn, isLoaded, clerkUser, getToken]);
+    initAuth();
+  }, [token]);
 
   useEffect(() => {
     if (currentUser) {
-      // Only load data when we have the mongo user details
       loadData();
     }
-  }, [currentUser, baseCurrency]); // trigger when currentUser is set
+  }, [currentUser]); // Trigger loadData when user is set
 
   useEffect(() => {
     if (isDarkMode) document.documentElement.classList.add('dark');
     else document.documentElement.classList.remove('dark');
     localStorage.setItem('fintrack_theme', isDarkMode ? 'dark' : 'light');
   }, [isDarkMode]);
+
+  const handleLoginSuccess = (newToken: string) => {
+    localStorage.setItem('auth_token', newToken);
+    setToken(newToken);
+  };
 
   const loadData = async () => {
     if (!currentUser) return;
@@ -86,11 +79,12 @@ const App: React.FC = () => {
         api.getBudgets(),
         api.getGoals(),
       ]);
-      setTransactions(txResponse.data.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+      setTransactions(txResponse.data.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime()));
       setBudgets(budgetResponse.data);
       setGoals(goalResponse.data);
     } catch (err: any) {
       console.error(err);
+      if (err.response?.status === 401) handleLogout();
     } finally {
       setLoading(false);
     }
@@ -147,49 +141,25 @@ const App: React.FC = () => {
   };
 
   const handleLogout = () => {
-    signOut();
+    localStorage.removeItem('auth_token');
+    api.setAuthToken(null);
+    setToken(null);
     setCurrentUser(null);
   };
 
-
-  if (!isLoaded) {
-    return <div className="min-h-screen flex items-center justify-center bg-space-950 text-white font-bold">Initializing Node...</div>;
+  if (authLoading) {
+    return <div className="min-h-screen flex items-center justify-center bg-space-950 text-white font-bold">Initializing Connection...</div>;
   }
 
-  if (!isSignedIn) {
+  if (!token || !currentUser) {
     return (
       <AuthPage
         isDarkMode={isDarkMode}
         toggleDarkMode={() => setIsDarkMode(!isDarkMode)}
+        onLoginSuccess={handleLoginSuccess}
       />
     );
   }
-
-  if (syncError) {
-    return (
-      <div className="min-h-screen flex flex-col gap-4 items-center justify-center bg-space-950 text-white p-8 text-center max-w-2xl mx-auto">
-        <div className="text-red-500 text-6xl mb-4">⚠️</div>
-        <h2 className="text-2xl font-black text-red-400">Identity Synchronization Failed</h2>
-        <p className="text-slate-400 font-mono text-sm bg-slate-900 p-4 rounded-xl border border-slate-800 w-full overflow-hidden text-wrap break-all">
-          {syncError}
-        </p>
-        <button
-          onClick={() => window.location.reload()}
-          className="mt-4 px-6 py-3 bg-brand-600 rounded-xl font-bold hover:bg-brand-500 transition-all"
-        >
-          Retry Connection
-        </button>
-        <p className="text-xs text-slate-600 mt-8">
-          If this persists, verify "CLERK_SECRET_KEY" and "MONGO_URI" in production environment variables.
-        </p>
-      </div>
-    )
-  }
-
-  if (!currentUser) {
-    return <div className="min-h-screen flex items-center justify-center bg-space-950 text-white font-bold animate-pulse">Syncing Identity...</div>;
-  }
-
 
   return (
     <div className="flex h-screen bg-space-50 dark:bg-space-950 transition-all duration-500 overflow-hidden">

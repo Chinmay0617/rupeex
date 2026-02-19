@@ -25,13 +25,8 @@ const token = localStorage.getItem('fintrack_session') ? JSON.parse(localStorage
 
 
 // Auth
-
-// export const login = (email: string, password: string) => api.post('/auth/login', { email, password });
-
-// export const googleLogin = (token: string) => api.post('/auth/google', { token });
-
-// export const register = (email: string, password: string) => api.post('/auth/signup', { email, password });
-
+export const register = (userData: any) => api.post('/auth/register', userData);
+export const login = (userData: any) => api.post('/auth/login', userData);
 export const getProfile = () => api.get('/auth/me');
 
 
