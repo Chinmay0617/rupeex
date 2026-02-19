@@ -21,10 +21,11 @@ export default function (req: Request, res: Response, next: NextFunction) {
 
     // Verify token
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
-        req.user = decoded;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as any;
+        req.user = decoded.user;
         next();
-    } catch (err) {
+    } catch (err: any) {
+        console.error("JWT Verification failed:", err.message);
         res.status(401).json({ msg: 'Token is not valid' });
     }
 };
