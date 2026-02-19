@@ -15,10 +15,10 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 app.use(cors({
-  origin: '*', // Allow all origins for debugging
+  origin: '*', // Allow all origins
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token'],
-  credentials: true
+  credentials: false // Disable cookies to allow wildcard origin
 }));
 app.use(express.json({ limit: '50mb' }));
 
@@ -27,7 +27,7 @@ app.options('*', cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token'],
-  credentials: true
+  credentials: false
 }));
 
 app.use((req, res, next) => {
