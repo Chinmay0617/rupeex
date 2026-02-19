@@ -39,12 +39,19 @@ router.post('/register', async (req, res) => {
       },
     };
 
+    if (!process.env.JWT_SECRET) {
+      throw new Error('JWT_SECRET is missing from environment variables');
+    }
+
     jwt.sign(
       payload,
-      process.env.JWT_SECRET as string,
+      process.env.JWT_SECRET,
       { expiresIn: 360000 },
       (err, token) => {
-        if (err) throw err;
+        if (err) {
+          console.error("JWT Sign Error:", err);
+          return res.status(500).json({ msg: "Error generating token" });
+        }
         res.json({ token });
       }
     );
@@ -84,12 +91,19 @@ router.post('/login', async (req, res) => {
       },
     };
 
+    if (!process.env.JWT_SECRET) {
+      throw new Error('JWT_SECRET is missing from environment variables');
+    }
+
     jwt.sign(
       payload,
-      process.env.JWT_SECRET as string,
+      process.env.JWT_SECRET,
       { expiresIn: 360000 },
       (err, token) => {
-        if (err) throw err;
+        if (err) {
+          console.error("JWT Sign Error:", err);
+          return res.status(500).json({ msg: "Error generating token" });
+        }
         res.json({ token });
       }
     );
