@@ -32,14 +32,38 @@ if (!uri) {
 }
 
 
-mongoose.connect(uri, {
-  dbName: 'rupeex_main'
-});
+import dbConnect from './src/lib/db.js';
 
-const connection = mongoose.connection;
-connection.once('open', () => {
-  console.log("MongoDB database connection established successfully");
-})
+// ... (other imports)
+
+// Connect to MongoDB
+const connectToDB = async () => {
+  try {
+    await dbConnect();
+    console.log("MongoDB database connection established successfully");
+  } catch (error) {
+    console.error("MongoDB connection error:", error);
+    // Don't exit process in serverless, just log
+  }
+};
+
+// Initial connection for local dev
+connectToDB();
+
+// Middleware to ensure DB is connected for every request (crucial for Vercel)
+app.use(async (req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    try {
+      await dbConnect();
+      next();
+    } catch (err) {
+      console.error("MongoDB connection failed in middleware:", err);
+      res.status(500).json({ msg: "Database connection failed" });
+    }
+  } else {
+    next();
+  }
+});
 
 app.get('/', (req, res) => {
   res.send('Rupeex backend is running!');
