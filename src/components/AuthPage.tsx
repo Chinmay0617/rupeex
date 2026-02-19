@@ -29,12 +29,25 @@ const AuthPage: React.FC<AuthPageProps> = ({ isDarkMode, toggleDarkMode, onLogin
         res = await register({ email, password });
       }
 
+      console.log("Auth Response:", res);
+
       const token = res.data.token;
-      onLoginSuccess(token);
+      if (token) {
+        onLoginSuccess(token);
+      } else {
+        setError("Server returned success but no token. Check console.");
+      }
 
     } catch (err: any) {
-      console.error(err);
-      setError(err.response?.data?.msg || "Authentication failed. Please try again.");
+      console.error("Auth Error:", err);
+
+      if (!err.response) {
+        setError("Network Error: Could not reach backend. Please check your internet connection.");
+      } else {
+        const status = err.response.status;
+        const msg = err.response.data?.msg || err.response.statusText;
+        setError(`Failed (${status}): ${msg}`);
+      }
     } finally {
       setLoading(false);
     }
