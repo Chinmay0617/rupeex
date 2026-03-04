@@ -11,6 +11,7 @@ import Reports from './components/Reports';
 import Advisor from './components/Advisor';
 import Sidebar from './components/Sidebar';
 import AuthPage from './components/AuthPage';
+import Logo from './components/Logo';
 
 type Tab = 'dashboard' | 'transactions' | 'predictions' | 'budgets' | 'reports' | 'advisor';
 
@@ -20,6 +21,7 @@ const App: React.FC = () => {
   const [authLoading, setAuthLoading] = useState(true);
 
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('fintrack_theme') !== 'light');
   const [baseCurrency, setBaseCurrency] = useState<CurrencyCode>(() =>
     (currentUser?.baseCurrency as CurrencyCode) || 'USD'
@@ -172,12 +174,38 @@ const App: React.FC = () => {
         setBaseCurrency={setBaseCurrency}
         userContext={{ name: currentUser.email.split('@')[0], email: currentUser.email }}
         onLogout={handleLogout}
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
       />
 
       <main className="flex-1 overflow-y-auto p-6 lg:p-12 custom-scrollbar relative">
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 max-w-[1400px] mx-auto w-full gap-6">
-          <div className="space-y-1">
-            <h1 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tighter">
+          <div className="flex items-center gap-4 w-full md:w-auto">
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="lg:hidden p-2 -ml-2 rounded-xl text-slate-500 hover:text-brand-600 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              aria-label="Open Mobile Menu"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16m-7 6h7" /></svg>
+            </button>
+
+            <div className="lg:hidden">
+              <Logo size="sm" showText={true} />
+            </div>
+
+            <div className="space-y-1 hidden md:block">
+              <h1 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tighter">
+                {activeTab === 'dashboard' ? 'Operations' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+              </h1>
+              <div className="flex items-center gap-3">
+                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-brand-500">Autonomous Node active</span>
+                <div className="w-1 h-1 bg-brand-500 rounded-full animate-ping"></div>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-1 md:hidden">
+            <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter">
               {activeTab === 'dashboard' ? 'Operations' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
             </h1>
             <div className="flex items-center gap-3">

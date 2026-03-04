@@ -14,10 +14,12 @@ interface SidebarProps {
   setBaseCurrency: (c: CurrencyCode) => void;
   userContext: { name: string; email: string };
   onLogout: () => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
-  activeTab, setActiveTab, isDarkMode, toggleDarkMode, baseCurrency, setBaseCurrency, userContext, onLogout
+  activeTab, setActiveTab, isDarkMode, toggleDarkMode, baseCurrency, setBaseCurrency, userContext, onLogout, isOpen, onClose
 }) => {
   const menuItems: { id: Tab; label: string; icon: React.ReactElement }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg> },
@@ -31,86 +33,94 @@ const Sidebar: React.FC<SidebarProps> = ({
   const currencies: CurrencyCode[] = ['USD', 'INR', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF', 'CNY', 'SGD', 'AED'];
 
   return (
-    <aside className="w-80 bg-slate-50 dark:bg-space-950 border-r border-slate-200 dark:border-slate-800/60 hidden lg:flex flex-col h-full transition-all">
-      <div className="p-10 flex-1 flex flex-col overflow-y-auto custom-scrollbar">
-        <Logo className="mb-14" size="md" />
+    <>
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-slate-900/50 dark:bg-black/50 z-40 lg:hidden backdrop-blur-sm transition-opacity"
+          onClick={onClose}
+        />
+      )}
+      <aside className={`fixed inset-y-0 left-0 z-50 w-80 bg-slate-50 dark:bg-space-950 border-r border-slate-200 dark:border-slate-800/60 flex flex-col h-full transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:relative lg:translate-x-0`}>
+        <div className="p-10 flex-1 flex flex-col overflow-y-auto custom-scrollbar">
+          <Logo className="mb-14" size="md" />
 
-        <div className="mb-6 ml-4">
-          <span className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-400">Menu</span>
-        </div>
-
-        <nav className="space-y-2 mb-14">
-          {menuItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center gap-5 px-6 py-5 rounded-2xl text-[13px] font-black transition-all duration-300 ${activeTab === item.id
-                ? 'sidebar-item-active'
-                : 'text-slate-500 hover:text-brand-600 hover:bg-white dark:hover:bg-slate-900/40'
-                }`}
-            >
-              <span className={activeTab === item.id ? 'text-brand-500' : 'text-slate-400 group-hover:text-brand-500 transition-colors'}>{item.icon}</span>
-              <span className="tracking-[0.1em] uppercase">{item.label}</span>
-            </button>
-          ))}
-        </nav>
-
-        <div className="mt-auto bg-white dark:bg-slate-900/40 p-5 rounded-[1.5rem] border border-slate-100 dark:border-slate-800/50 shadow-sm">
-          <div className="flex justify-between items-center mb-4 px-1">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Currency</span>
-            <div className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse"></div>
+          <div className="mb-6 ml-4">
+            <span className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-400">Menu</span>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            {currencies.map(curr => (
+          <nav className="space-y-2 mb-14">
+            {menuItems.map((item) => (
               <button
-                key={curr}
-                onClick={() => setBaseCurrency(curr)}
-                className={`flex-1 min-w-[3.5rem] py-2 rounded-xl text-base font-black transition-all border ${baseCurrency === curr
-                  ? 'bg-brand-500 text-white border-brand-500 shadow-md transform scale-105'
-                  : 'bg-slate-50 dark:bg-slate-950/30 text-slate-500 border-slate-100 dark:border-slate-800 hover:border-brand-300 dark:hover:border-brand-700 hover:text-brand-600'
+                key={item.id}
+                onClick={() => { setActiveTab(item.id); onClose(); }}
+                className={`w-full flex items-center gap-5 px-6 py-5 rounded-2xl text-[13px] font-black transition-all duration-300 ${activeTab === item.id
+                  ? 'sidebar-item-active'
+                  : 'text-slate-500 hover:text-brand-600 hover:bg-white dark:hover:bg-slate-900/40'
                   }`}
               >
-                {CURRENCY_SYMBOLS[curr]}
+                <span className={activeTab === item.id ? 'text-brand-500' : 'text-slate-400 group-hover:text-brand-500 transition-colors'}>{item.icon}</span>
+                <span className="tracking-[0.1em] uppercase">{item.label}</span>
               </button>
             ))}
-          </div>
-        </div>
-      </div>
+          </nav>
 
-      <div className="p-10 space-y-4">
-        <div className="flex items-center gap-4 p-5 bg-white dark:bg-slate-900/40 rounded-[2rem] border border-slate-100 dark:border-slate-800/50 shadow-sm">
-          <div className="w-12 h-12 neo-gradient rounded-2xl flex items-center justify-center text-white text-sm font-black shadow-xl">
-            {userContext.name.charAt(0).toUpperCase()}
-          </div>
-          <div className="flex flex-col min-w-0">
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 truncate leading-none mb-2">Profile</span>
-            <span className="text-sm font-black truncate text-slate-900 dark:text-white">{userContext.name}</span>
+          <div className="mt-auto bg-white dark:bg-slate-900/40 p-5 rounded-[1.5rem] border border-slate-100 dark:border-slate-800/50 shadow-sm">
+            <div className="flex justify-between items-center mb-4 px-1">
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Currency</span>
+              <div className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse"></div>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {currencies.map(curr => (
+                <button
+                  key={curr}
+                  onClick={() => setBaseCurrency(curr)}
+                  className={`flex-1 min-w-[3.5rem] py-2 rounded-xl text-base font-black transition-all border ${baseCurrency === curr
+                    ? 'bg-brand-500 text-white border-brand-500 shadow-md transform scale-105'
+                    : 'bg-slate-50 dark:bg-slate-950/30 text-slate-500 border-slate-100 dark:border-slate-800 hover:border-brand-300 dark:hover:border-brand-700 hover:text-brand-600'
+                    }`}
+                >
+                  {CURRENCY_SYMBOLS[curr]}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
-        <div className="flex gap-3">
-          <button
-            onClick={toggleDarkMode}
-            className="flex-1 p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-brand-600 transition-all flex justify-center items-center shadow-sm hover:scale-105"
-            title="Switch Theme"
-          >
-            {isDarkMode ? (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-            ) : (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
-            )}
-          </button>
-          <button
-            onClick={onLogout}
-            className="flex-1 p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-400 hover:text-rose-600 transition-all flex justify-center items-center shadow-sm hover:scale-105"
-            title="Logout"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-          </button>
+        <div className="p-10 space-y-4">
+          <div className="flex items-center gap-4 p-5 bg-white dark:bg-slate-900/40 rounded-[2rem] border border-slate-100 dark:border-slate-800/50 shadow-sm">
+            <div className="w-12 h-12 neo-gradient rounded-2xl flex items-center justify-center text-white text-sm font-black shadow-xl">
+              {userContext.name.charAt(0).toUpperCase()}
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 truncate leading-none mb-2">Profile</span>
+              <span className="text-sm font-black truncate text-slate-900 dark:text-white">{userContext.name}</span>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={toggleDarkMode}
+              className="flex-1 p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-brand-600 transition-all flex justify-center items-center shadow-sm hover:scale-105"
+              title="Switch Theme"
+            >
+              {isDarkMode ? (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+              ) : (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+              )}
+            </button>
+            <button
+              onClick={onLogout}
+              className="flex-1 p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-400 hover:text-rose-600 transition-all flex justify-center items-center shadow-sm hover:scale-105"
+              title="Logout"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+            </button>
+          </div>
         </div>
-      </div>
-    </aside>
+      </aside>
+    </>
   );
 };
 
